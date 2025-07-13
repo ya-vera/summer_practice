@@ -1,9 +1,36 @@
-import { Component, For } from 'solid-js';
+import { Component, For, createEffect, createSignal } from 'solid-js';
 import { mean, median, variance, sd, min, max, trimmedMinMax } from '../utils/stats';
 import { ess } from '../utils/ac';
 import { state } from '../store/traceStore';
 
 const CompareTable: Component = () => {
+    const [rows, setRows] = createSignal<JSX.Element[]>([]);
+
+    const renderRow = (p: string) => {
+        const arr = state.data[p]?.slice(state.burnin) ?? [];
+        if (arr.length === 0) return null;
+        const [tMin, tMax] = trimmedMinMax(arr);
+        return (
+            <tr>
+                <td class="border px-2 py-1">{p}</td>
+                <td class="border px-2 py-1">{mean(arr).toFixed(2)}</td>
+                <td class="border px-2 py-1">{median(arr).toFixed(2)}</td>
+                <td class="border px-2 py-1">{variance(arr).toFixed(2)}</td>
+                <td class="border px-2 py-1">{sd(arr).toFixed(2)}</td>
+                <td class="border px-2 py-1">{min(arr).toFixed(2)}</td>
+                <td class="border px-2 py-1">{max(arr).toFixed(2)}</td>
+                <td class="border px-2 py-1">{tMin.toFixed(2)}</td>
+                <td class="border px-2 py-1">{tMax.toFixed(2)}</td>
+                <td class="border px-2 py-1">{ess(arr).toFixed(0)}</td>
+            </tr>
+        );
+    };
+
+    createEffect(() => {
+        const newRows = state.selected.map(p => renderRow(p)).filter(row => row !== null) as JSX.Element[];
+        setRows(newRows);
+    });
+
     return (
         <table class="w-full table-auto border-collapse">
             <thead>
@@ -21,26 +48,8 @@ const CompareTable: Component = () => {
                 </tr>
             </thead>
             <tbody>
-                <For each={state.selected}>
-                    {(p) => {
-                        const arr = state.data[p]?.slice(state.burnin) ?? [];
-                        if (arr.length === 0) return null;
-                        const [tMin, tMax] = trimmedMinMax(arr);
-                        return (
-                            <tr>
-                                <td class="border px-2 py-1">{p}</td>
-                                <td class="border px-2 py-1">{mean(arr).toFixed(2)}</td>
-                                <td class="border px-2 py-1">{median(arr).toFixed(2)}</td>
-                                <td class="border px-2 py-1">{variance(arr).toFixed(2)}</td>
-                                <td class="border px-2 py-1">{sd(arr).toFixed(2)}</td>
-                                <td class="border px-2 py-1">{min(arr).toFixed(2)}</td>
-                                <td class="border px-2 py-1">{max(arr).toFixed(2)}</td>
-                                <td class="border px-2 py-1">{tMin.toFixed(2)}</td>
-                                <td class="border px-2 py-1">{tMax.toFixed(2)}</td>
-                                <td class="border px-2 py-1">{ess(arr).toFixed(0)}</td>
-                            </tr>
-                        );
-                    }}
+                <For each={rows()}>
+                    {row => row}
                 </For>
             </tbody>
         </table>
