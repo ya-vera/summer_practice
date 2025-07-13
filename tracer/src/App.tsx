@@ -11,20 +11,20 @@ const App: Component = () => {
     const [mode, setMode] = createSignal<'trace' | 'histogram' | 'boxplot' | 'compare'>('trace');
 
     return (
-        <div class="min-h-screen bg-gray-50">
+        <div class="min-h-screen flex flex-col bg-gray-50">
             <h1 class="p-4 text-2xl font-bold">Tracer SPA</h1>
             <FileLoader />
-            <div class="flex">
-                <div class="w-1/4 border-r">
+            <div class="flex flex-1">
+                <aside class="w-1/4 border-r p-4 overflow-y-auto">
                     <ParamList />
-                </div>
-                <div class="w-3/4 p-4">
+                </aside>
+                <main class="w-3/4 p-4 overflow-auto">
                     <ModeChart onModeChange={setMode} />
-                    {mode() === 'trace'     && <TraceChart />}
+                    {mode() === 'trace' && <TraceChart />}
                     {mode() === 'histogram' && <HistogramChart />}
-                    {mode() === 'boxplot'   && <BoxplotChart />}
-                    {mode() === 'compare'   && <CompareTable />}
-                </div>
+                    {mode() === 'boxplot' && <BoxplotChart />}
+                    {mode() === 'compare' && <CompareTable />}
+                </main>
             </div>
         </div>
     );
