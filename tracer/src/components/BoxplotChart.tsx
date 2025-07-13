@@ -8,31 +8,32 @@ const BoxplotChart: Component = () => {
 
     const drawBoxplot = (
         svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
-        data: number[],
+        data: Float64Array,
         paramName: string,
         width: number,
         height: number,
         margin: { top: number; right: number; bottom: number; left: number }
     ) => {
-        const sorted = [...data].sort((a, b) => a - b);
-        const q1 = d3.quantile(sorted, 0.25)!;
-        const q3 = d3.quantile(sorted, 0.75)!;
-        const med = median(data);
-        const [trimmedMin, trimmedMax] = trimmedMinMax(data);
+        const arr = Array.from(data);
+        const sorted = [...arr].sort((a, b) => a - b);
+        const q1 = d3.quantileSorted(sorted, 0.25)!;
+        const q3 = d3.quantileSorted(sorted, 0.75)!;
+        const med = median(arr);
+        const [trimmedMin, trimmedMax] = trimmedMinMax(arr);
         const iqr = q3 - q1;
         const whiskerMin = Math.max(trimmedMin, q1 - 1.5 * iqr);
         const whiskerMax = Math.min(trimmedMax, q3 + 1.5 * iqr);
 
-        const x = d3.scaleBand()
+        const x = d3.scaleBand<string>()
             .domain([paramName])
             .range([margin.left, width - margin.right])
             .padding(0.1);
 
-        let yDomain = [whiskerMin, whiskerMax];
+        let yDomain: [number, number] = [whiskerMin, whiskerMax];
         const range = whiskerMax - whiskerMin;
 
         if (range < 0.1) {
-            const padding = Math.max(range * 0.1, 0.001); 
+            const padding = Math.max(range * 0.1, 0.001);
             yDomain = [whiskerMin - padding, whiskerMax + padding];
         }
 
@@ -45,7 +46,7 @@ const BoxplotChart: Component = () => {
             .attr('x', x(paramName)!)
             .attr('y', y(q3))
             .attr('width', x.bandwidth())
-            .attr('height', Math.max(1, y(q1) - y(q3))) 
+            .attr('height', Math.max(1, y(q1) - y(q3)))
             .attr('fill', 'steelblue');
 
         svg.append('line')
@@ -63,7 +64,7 @@ const BoxplotChart: Component = () => {
             .attr('y2', y(whiskerMax))
             .attr('stroke', 'black');
 
-        svg.append('line') 
+        svg.append('line')
             .attr('x1', x(paramName)! + x.bandwidth() / 2)
             .attr('x2', x(paramName)! + x.bandwidth() / 2)
             .attr('y1', y(q1))
@@ -72,14 +73,14 @@ const BoxplotChart: Component = () => {
 
         svg.append('line')
             .attr('x1', x(paramName)! + x.bandwidth() / 4)
-            .attr('x2', x(paramName)! + x.bandwidth() * 3 / 4)
+            .attr('x2', x(paramName)! + (x.bandwidth() * 3) / 4)
             .attr('y1', y(whiskerMax))
             .attr('y2', y(whiskerMax))
             .attr('stroke', 'black');
 
         svg.append('line')
             .attr('x1', x(paramName)! + x.bandwidth() / 4)
-            .attr('x2', x(paramName)! + x.bandwidth() * 3 / 4)
+            .attr('x2', x(paramName)! + (x.bandwidth() * 3) / 4)
             .attr('y1', y(whiskerMin))
             .attr('y2', y(whiskerMin))
             .attr('stroke', 'black');
@@ -107,8 +108,8 @@ const BoxplotChart: Component = () => {
             return;
         }
 
-        const arr = state.data[state.selected[0]]?.slice(state.burnin) ?? [];
-        if (arr.length === 0) {
+        const raw = state.data[state.selected[0]]?.slice(state.burnin) ?? new Float64Array();
+        if (raw.length === 0) {
             svg.append('text')
                 .attr('x', 20)
                 .attr('y', 20)
@@ -120,10 +121,10 @@ const BoxplotChart: Component = () => {
         const height = 300;
         const margin = { top: 20, right: 20, bottom: 30, left: 40 };
 
-        drawBoxplot(svg, arr, state.selected[0], width, height, margin);
+        drawBoxplot(svg, raw, state.selected[0], width, height, margin);
     });
 
-    return <svg ref={ref} width="600" height="300"></svg>;
+    return <svg ref={ref} width="600" height="300" />;
 };
 
 export default BoxplotChart;
