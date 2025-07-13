@@ -1,37 +1,52 @@
 import { Component } from 'solid-js';
 import { mean } from '../utils/stats';
 import { ess } from '../utils/ac';
-import { state, setState } from '../store/traceStore';
+import { state, toggleParam } from '../store/traceStore';
 
-const ParamList: Component = () => {
+const ParamList: Component<{ mode: 'trace' | 'histogram' | 'boxplot' | 'compare' }> = (props) => {
+    const getColor = (essValue: number): string => {
+        if (essValue < 100) {
+            return 'text-red-600';
+        }
+        if (essValue < 400) {
+            return 'text-orange-600';
+        }
+        return 'text-green-600';
+    };
+
+    const handleCheckboxChange = (param: string) => {
+        if (props.mode !== 'compare') {
+            toggleParam(param, true);
+        } else {
+            toggleParam(param, false);
+        }
+    };
+
+    const renderParam = (p: string) => {
+        const arr = state.data[p]?.slice(state.burnin) ?? [];
+        const m = mean(arr).toFixed(2);
+        const e = ess(arr);
+        const color = getColor(e);
+
+        return (
+            <label class="flex items-center cursor-pointer">
+                <input
+                    type="checkbox"
+                    checked={state.selected.includes(p)}
+                    onChange={() => handleCheckboxChange(p)}
+                />
+                <span class="ml-2 font-medium">{p}</span>
+                <span class={`${color} ml-2`}>ESS={e.toFixed(0)}</span>
+                <span class="ml-2">μ={m}</span>
+            </label>
+        );
+    };
+
     return (
-        <div class="p-4 space-y-2 overflow-y-auto h-full">
-            {state.params.map((param) => {
-                const raw = state.data[param].slice(state.burnin);
-                const arr = Array.from(raw);
-                const m   = mean(arr).toFixed(2);
-                const e   = ess(arr);
-                const color =
-                    e < 100   ? 'text-red-600'
-                    : e < 400  ? 'text-orange-600'
-                               : 'text-green-600';
-
-                return (
-                    <label class="flex items-center cursor-pointer" key={param}>
-                        <input
-                            type="radio"
-                            name="selectedParam"
-                            value={param}
-                            checked={state.selected[0] === param}
-                            onChange={() => setState('selected', [param])}
-                            class="form-radio"
-                        />
-                        <span class="ml-2 font-medium">{param}</span>
-                        <span class={`${color} ml-2`}>ESS={e.toFixed(0)}</span>
-                        <span class="ml-2">μ={m}</span>
-                    </label>
-                );
-            })}
+        <div class="p-4 space-y-2">
+            <For each={state.params}>
+                {renderParam}
+            </For>
         </div>
     );
 };

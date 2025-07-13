@@ -24,6 +24,11 @@ export function setBurnin(n: number) {
     setState('burnin', n);
 }
 
-export function toggleParam(p: string) {
-    setState('selected', (sel) => (sel.includes(p) ? sel.filter((x) => x !== p) : [...sel, p]));
+export function toggleParam(p: string, singleSelect: boolean) {
+    setState('selected', (sel) => {
+        if (singleSelect) {
+            return sel.includes(p) ? [] : [p];
+        }
+        return sel.includes(p) ? sel.filter((x) => x !== p) : [...sel, p];
+    });
 }
