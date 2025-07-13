@@ -1,16 +1,14 @@
 import { Component, createSignal } from 'solid-js';
 import FileLoader from './components/FileLoader';
 import ParamList from './components/ParamList';
-import { ChartSwitcher } from './components/ChartSwitcher';
+import ModeChart from './components/ModeChart';
 import TraceChart from './components/TraceChart';
 import HistogramChart from './components/HistogramChart';
 import BoxplotChart from './components/BoxplotChart';
 import CompareTable from './components/CompareTable';
 
 const App: Component = () => {
-    const [mode, setMode] = createSignal('trace');
-
-    // console.log('App, mode:', mode());
+    const [mode, setMode] = createSignal<'trace' | 'histogram' | 'boxplot' | 'compare'>('trace');
 
     return (
         <div class="min-h-screen bg-gray-50">
@@ -21,11 +19,11 @@ const App: Component = () => {
                     <ParamList />
                 </div>
                 <div class="w-3/4 p-4">
-                    <ChartSwitcher onChange={setMode} />
-                    {mode() === 'trace' && <TraceChart />}
+                    <ModeChart onModeChange={setMode} />
+                    {mode() === 'trace'     && <TraceChart />}
                     {mode() === 'histogram' && <HistogramChart />}
-                    {mode() === 'boxplot' && <BoxplotChart />}
-                    {mode() === 'compare' && <CompareTable />}
+                    {mode() === 'boxplot'   && <BoxplotChart />}
+                    {mode() === 'compare'   && <CompareTable />}
                 </div>
             </div>
         </div>
